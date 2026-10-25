@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env
+api_key.txt
+*.key
+runs/*
+!runs/.gitkeep
+freeze/*
+!freeze/.gitkeep

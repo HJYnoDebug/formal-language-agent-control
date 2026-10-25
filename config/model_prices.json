@@ -1,0 +1,141 @@
+{
+  "_meta": {
+    "purpose": "Per-model USD price per MILLION tokens for the v5.4 experiments (01_task_design.md §6). Each model is pinned to ONE fp8 provider via OpenRouter provider routing with fallbacks disabled (field 'provider').",
+    "units": "USD per 1,000,000 tokens",
+    "source": "OpenRouter public catalog and per-model endpoints, checked 2026-10-03 (runs/model_availability_2026-10-03.json) and 2026-10-04 (30B-A3B-Instruct-2507). Re-verify on the day of each run and record actual billed cost from the API response.",
+    "lines": "Dense line = original hybrid-thinking Qwen3 (14B, 32B; '/no_think'). MoE line = 2507 non-thinking instruct releases (30B-A3B, 235B-A22B). Lines are analysed separately.",
+    "superseded": "qwen/qwen3-30b-a3b (original hybrid, DeepInfra 0.12/0.50) replaced on 2026-10-04 by qwen/qwen3-30b-a3b-instruct-2507 so that the MoE pair shares one release. The 2026-09-28 price table is obsolete; Qwen3-8B and the original Qwen3-235B-A22B are listed for removal on 2026-10-09.",
+    "providers_2026_10_12": "Provider pins revised after the desk smoke (02b v1.6 §14 A10): every pinned endpoint must accept tool_choice='required'. 32B -> Tenstorrent (the only endpoint that accepts it), 235B -> Parasail (accepts it, uptime 100%). Prices and context lengths from the OpenRouter endpoints API on 2026-10-12.",
+    "models_2026_10_17": "Model set switched to the Mistral 3 family before any formal data (02b §14 D10): Ministral 3 3B / 8B / 14B (dense) and Mistral Large 3 (675B MoE, 41B active), all served by Mistral. Reason: every one has prompt caching (cached input at 10% of the input price), while Qwen3-14B and Qwen3-30B-A3B have no caching provider on OpenRouter; formal plan about $13 against about $34. The Qwen3 entries stay for the earlier smoke records. active_params_b of the Ministral models: nominal size; check the model cards before using the compute proxy."
+  },
+  "qwen/qwen3-14b": {
+    "input": 0.12,
+    "output": 0.24,
+    "provider": "DeepInfra",
+    "arch": "dense",
+    "active_params_b": 14,
+    "quantization": "fp8",
+    "reasoning": "hybrid thinking model; append '/no_think' to every user message (reasoning={'enabled': false} and effort='none' are NOT honored via DeepInfra; verified 2026-10-03). Expect reasoning_tokens <= 1",
+    "context": 40960
+  },
+  "qwen/qwen3-32b": {
+    "input": 0.14,
+    "output": 0.4,
+    "provider": "Tenstorrent",
+    "arch": "dense",
+    "active_params_b": 32,
+    "quantization": "fp8",
+    "reasoning": "hybrid thinking model; append '/no_think' to every user message (verified 2026-10-03). Expect reasoning_tokens <= 1",
+    "previous_provider": {
+      "name": "DeepInfra",
+      "input": 0.08,
+      "output": 0.28,
+      "why_replaced": "2026-10-12 smoke: OpenRouter routing removed it under tool_choice=required (HTTP 404, 'Filter by Tool Compatibility')"
+    },
+    "context": 20000,
+    "cache_read": 0.09
+  },
+  "qwen/qwen3-30b-a3b-instruct-2507": {
+    "input": 0.1,
+    "output": 0.3,
+    "provider": "Nebius",
+    "alt_provider": {
+      "name": "SiliconFlow",
+      "input": 0.09,
+      "output": 0.3,
+      "quantization": "fp8",
+      "verified": "2026-10-04"
+    },
+    "arch": "moe",
+    "active_params_b": 3,
+    "quantization": "fp8",
+    "reasoning": "non-thinking instruct release; no handling needed (reasoning_tokens == 0 verified 2026-10-04, runs/smoke_test3_2026-10-04.json). Not available on DeepInfra",
+    "context": 262144
+  },
+  "qwen/qwen3-235b-a22b-2507": {
+    "input": 0.14,
+    "output": 0.8,
+    "provider": "Parasail",
+    "arch": "moe",
+    "active_params_b": 22,
+    "quantization": "fp8",
+    "reasoning": "non-thinking instruct release; no handling needed (reasoning_tokens == 0 verified 2026-10-03). DeepInfra showed a transient HTTP 429; use exponential backoff",
+    "previous_provider": {
+      "name": "DeepInfra",
+      "input": 0.09,
+      "output": 0.55,
+      "why_replaced": "2026-10-12 smoke: OpenRouter routing removed it under tool_choice=required (HTTP 404, 'Filter by Tool Compatibility'); also HTTP 429 / uptime 0% that day"
+    },
+    "context": 131072,
+    "cache_read": 0.05
+  },
+  "mistralai/ministral-3b-2512": {
+    "input": 0.1,
+    "output": 0.1,
+    "cache_read": 0.01,
+    "arch": "dense",
+    "active_params_b": 3,
+    "context": 131072,
+    "provider": "Mistral",
+    "quantization": "unknown (first-party)",
+    "reasoning": "non-reasoning release (OpenRouter lists no reasoning parameter); reasoning_tokens checked by the pilot gate Q2",
+    "source": "OpenRouter endpoints API 2026-10-16; compatibility mini-test 2026-10-17 (tool_choice=required, tool -> user order, cached tokens billed at 10%)"
+  },
+  "mistralai/ministral-8b-2512": {
+    "input": 0.15,
+    "output": 0.15,
+    "cache_read": 0.015,
+    "arch": "dense",
+    "active_params_b": 8,
+    "context": 262144,
+    "provider": "Mistral",
+    "quantization": "unknown (first-party)",
+    "reasoning": "non-reasoning release (OpenRouter lists no reasoning parameter); reasoning_tokens checked by the pilot gate Q2",
+    "source": "OpenRouter endpoints API 2026-10-16; compatibility mini-test 2026-10-17 (tool_choice=required, tool -> user order, cached tokens billed at 10%)"
+  },
+  "mistralai/ministral-14b-2512": {
+    "input": 0.2,
+    "output": 0.2,
+    "cache_read": 0.02,
+    "arch": "dense",
+    "active_params_b": 14,
+    "context": 262144,
+    "provider": "Mistral",
+    "quantization": "unknown (first-party)",
+    "reasoning": "non-reasoning release (OpenRouter lists no reasoning parameter); reasoning_tokens checked by the pilot gate Q2",
+    "source": "OpenRouter endpoints API 2026-10-16; compatibility mini-test 2026-10-17 (tool_choice=required, tool -> user order, cached tokens billed at 10%)"
+  },
+  "mistralai/mistral-large-2512": {
+    "input": 0.55,
+    "output": 1.65,
+    "cache_read": 0.055,
+    "arch": "moe",
+    "active_params_b": 41,
+    "total_params_b": 675,
+    "context": 262144,
+    "provider": "Mistral",
+    "route": "mistral/eu",
+    "max_concurrency": 2,
+    "quantization": "unknown (first-party)",
+    "reasoning": "non-reasoning release (OpenRouter lists no reasoning parameter); reasoning_tokens checked by the pilot gate Q2",
+    "source": "OpenRouter endpoints API 2026-10-16; compatibility mini-test 2026-10-17 (tool_choice=required, tool -> user order, cached tokens billed at 10%); 2026-10-17 (freeze log, changes after the freeze 2): routed to OpenRouter's EU endpoint of Mistral (route mistral/eu, list prices 0.55 / 1.65 / cache 0.055, i.e. +10%) because the default endpoint was rate-limited upstream (cached share 0.70 there vs 0.88 on mistral/eu in the cost test); at most 2 concurrent episodes"
+  },
+  "mistralai/mistral-small-2603": {
+    "input": 0.15,
+    "output": 0.6,
+    "cache_read": 0.015,
+    "arch": "moe",
+    "active_params_b": 6.5,
+    "total_params_b": 119,
+    "context": 262144,
+    "provider": "Mistral",
+    "quantization": "unknown (first-party)",
+    "reasoning": "hybrid; OpenRouter lists reasoning default_enabled=false, efforts high/none; switched off explicitly by request_extra; reasoning_tokens checked by gate Q2",
+    "request_extra": {
+      "reasoning": {
+        "effort": "none"
+      }
+    },
+    "source": "OpenRouter models + endpoints API 2026-10-17 (HF id Mistral-Small-4-119B-2603; active parameters approximate, from the release notes). Candidate strong reference for the cost test of 2026-10-17, not in the plan."
+  }
+}
