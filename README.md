@@ -33,6 +33,24 @@ is legal. The control conditions hand these parts to the runtime one at a time:
 - **E**: a gate that blocks an illegal resume, with nothing shown; **C3**: C2 plus the gate.
 - **P** (a placebo display of the same length) and **T** (written reasoning before every step) are also implemented.
 
+## Partial control and the workflow boundary
+
+The controls form a ladder from a bare prompt towards a workflow, but none of them reaches it. Even under C3, which
+holds the rule's state, names the legal ticket and blocks every illegal resume, the controller governs one kind of
+decision only: which ticket on hold is resumed. The agent still decides which ticket to work on, when to start a
+waiting ticket, when to look something up and when to switch, so it remains an agent. At the far end, the reference
+condition **W** is a workflow: a program that schedules every step by the procedure and runs no model
+(`runner.run_workflow`), the baseline for completion and cost.
+
+Two limits mark the boundary:
+
+- **A gate enforces safety, not progress.** It can block a resume that would leave the procedure language, but it
+  cannot make the agent finish its tickets. That liveness property is only monitored: after a lapse the agent is
+  reminded that tickets are still on hold, without being told which.
+- **Only decisions fixed by the rule are handed over.** The resume decision is determined by the rule and the
+  history, so a controller can hold it; decisions that depend on information the designer does not have stay with
+  the agent. Handing over more than the rule requires turns the agent into a workflow.
+
 ## Design principles
 
 - **One change per comparison.** Each planned pair of conditions differs in exactly one thing: storage, its class,
